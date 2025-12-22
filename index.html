@@ -3,21 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A-One Chat | Photo & Video</title>
+    <title>A-One Chat | Full Features</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #fafafa; margin: 0; padding-bottom: 50px; }
         .header { background: white; border-bottom: 1px solid #dbdbdb; padding: 10px 0; text-align: center; position: sticky; top: 0; z-index: 1000; }
         .main-container { max-width: 500px; margin: 20px auto; padding: 10px; }
         .card { background: white; border: 1px solid #dbdbdb; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
         input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #dbdbdb; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        .btn-primary { background-color: #0095f6; color: white; }
+        button { padding: 10px 15px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 5px; }
+        .btn-primary { background-color: #0095f6; color: white; width: 100%; }
         .post-card { background: white; border: 1px solid #dbdbdb; border-radius: 8px; margin-bottom: 20px; overflow: hidden; }
         .post-header { padding: 10px; font-weight: bold; display: flex; align-items: center; border-bottom: 1px solid #efefef; }
         .user-pic { width: 35px; height: 35px; border-radius: 50%; margin-right: 10px; object-fit: cover; }
         .post-media { width: 100%; display: block; background: #000; }
-        .post-content { padding: 12px; }
-        .toggle-link { color: #0095f6; cursor: pointer; text-align: center; display: block; margin-top: 15px; font-size: 14px; }
+        .post-actions { padding: 10px; display: flex; gap: 15px; font-size: 20px; }
+        .action-btn { cursor: pointer; background: none; border: none; font-size: 22px; padding: 0; }
+        .post-content { padding: 0 12px 12px 12px; }
+        .comment-box { border-top: 1px solid #efefef; padding: 10px; display: flex; }
+        .comment-input { border: none; flex-grow: 1; outline: none; font-size: 14px; }
+        .comment-list { padding: 5px 12px; font-size: 13px; color: #444; }
+        .comment-item { margin-bottom: 4px; }
     </style>
 </head>
 <body>
@@ -29,13 +34,12 @@
             <h3 id="auth-title" style="text-align:center;">Login</h3>
             <div id="signup-extra" style="display:none;">
                 <input type="text" id="reg-username" placeholder="Full Name">
-                <label style="font-size: 12px;">Profile Picture:</label>
                 <input type="file" id="reg-profile-pic" accept="image/*">
             </div>
             <input type="email" id="auth-email" placeholder="Email">
             <input type="password" id="auth-password" placeholder="Password">
             <button id="auth-btn" class="btn-primary" onclick="handleAuth()">Login</button>
-            <span id="toggle-auth" class="toggle-link" onclick="toggleAuthMode()">Don't have an account? Sign Up</span>
+            <span class="toggle-link" style="color:#0095f6; cursor:pointer; display:block; text-align:center; margin-top:10px;" onclick="toggleAuthMode()">Switch to Sign Up</span>
         </div>
 
         <div id="app-content" style="display:none;">
@@ -44,11 +48,10 @@
                     <img id="current-user-pic" class="user-pic" src="">
                     <span id="current-user-name" style="font-weight:bold;"></span>
                 </div>
-                <button onclick="logout()" style="width:auto; background:none; color:red;">Logout</button>
+                <button onclick="logout()" style="background:none; color:red;">Logout</button>
             </div>
 
             <div class="card">
-                <label style="font-weight:bold; font-size:13px;">Select Photo or Video:</label>
                 <input type="file" id="post-media-input" accept="image/*,video/*">
                 <input type="text" id="post-caption-input" placeholder="Write a caption...">
                 <button id="post-btn" class="btn-primary" onclick="handlePost()">Post Now</button>
@@ -81,7 +84,6 @@
             isLoginMode = !isLoginMode;
             document.getElementById('auth-title').innerText = isLoginMode ? "Login" : "Sign Up";
             document.getElementById('signup-extra').style.display = isLoginMode ? "none" : "block";
-            document.getElementById('toggle-auth').innerText = isLoginMode ? "Sign Up here" : "Login here";
         };
 
         window.handleAuth = async () => {
@@ -120,9 +122,8 @@
             const caption = document.getElementById('post-caption-input').value;
             if (!file) return alert("Select a file!");
             
-            document.getElementById('post-btn').innerText = "Uploading Media...";
+            document.getElementById('post-btn').innerText = "Uploading...";
             const resourceType = file.type.startsWith('video') ? 'video' : 'image';
-            
             const formData = new FormData();
             formData.append("file", file);
             formData.append("upload_preset", "mloo8sj4");
@@ -137,10 +138,34 @@
                 username: auth.currentUser.displayName,
                 userPhoto: auth.currentUser.photoURL,
                 likes: [],
+                comments: [],
                 timestamp: serverTimestamp()
             });
-            alert("Posted!");
             location.reload();
+        };
+
+        window.toggleLike = async (postId, likes) => {
+            const postRef = doc(db, "posts", postId);
+            const isLiked = likes.includes(auth.currentUser.uid);
+            await updateDoc(postRef, { likes: isLiked ? arrayRemove(auth.currentUser.uid) : arrayUnion(auth.currentUser.uid) });
+        };
+
+        window.sharePost = (url) => {
+            navigator.clipboard.writeText(url);
+            alert("ലിങ്ക് കോപ്പി ചെയ്തു!");
+        };
+
+        window.addComment = async (postId, inputId) => {
+            const text = document.getElementById(inputId).value;
+            if (!text) return;
+            const postRef = doc(db, "posts", postId);
+            await updateDoc(postRef, {
+                comments: arrayUnion({
+                    user: auth.currentUser.displayName,
+                    text: text
+                })
+            });
+            document.getElementById(inputId).value = "";
         };
 
         function loadPosts() {
@@ -149,16 +174,29 @@
                 feed.innerHTML = "";
                 snap.forEach(docSnap => {
                     const post = docSnap.data();
+                    const isLiked = post.likes.includes(auth.currentUser.uid);
                     const mediaHtml = post.mediaType === 'video' 
                         ? `<video class="post-media" src="${post.mediaUrl}" controls></video>`
                         : `<img class="post-media" src="${post.mediaUrl}">`;
                     
+                    let commentsHtml = post.comments.map(c => `<div class="comment-item"><b>${c.user}</b> ${c.text}</div>`).join('');
+
                     feed.innerHTML += `
                         <div class="post-card">
                             <div class="post-header"><img class="user-pic" src="${post.userPhoto}"> ${post.username}</div>
                             ${mediaHtml}
+                            <div class="post-actions">
+                                <button class="action-btn" onclick="toggleLike('${docSnap.id}', ${JSON.stringify(post.likes)})">${isLiked ? '❤️' : '🤍'}</button>
+                                <button class="action-btn" onclick="sharePost('${post.mediaUrl}')">🔗</button>
+                            </div>
                             <div class="post-content">
+                                <b>${post.likes.length} likes</b><br>
                                 <b>${post.username}</b> ${post.caption}
+                            </div>
+                            <div class="comment-list">${commentsHtml}</div>
+                            <div class="comment-box">
+                                <input id="in-${docSnap.id}" class="comment-input" placeholder="Add a comment...">
+                                <button onclick="addComment('${docSnap.id}', 'in-${docSnap.id}')" style="background:none; color:#0095f6;">Post</button>
                             </div>
                         </div>`;
                 });
