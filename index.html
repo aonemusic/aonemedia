@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A-One Chat | Delete Support</title>
+    <title>A-One Chat | Follow Feature</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #fafafa; margin: 0; padding-bottom: 50px; }
         .header { background: white; border-bottom: 1px solid #dbdbdb; padding: 10px 0; text-align: center; position: sticky; top: 0; z-index: 1000; }
         .main-container { max-width: 500px; margin: 20px auto; padding: 10px; }
         .card { background: white; border: 1px solid #dbdbdb; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
         input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #dbdbdb; border-radius: 4px; box-sizing: border-box; }
-        button { padding: 10px 15px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 5px; }
+        button { padding: 8px 12px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .btn-primary { background-color: #0095f6; color: white; width: 100%; }
-        .post-card { background: white; border: 1px solid #dbdbdb; border-radius: 8px; margin-bottom: 20px; overflow: hidden; position: relative; }
+        .follow-btn { background-color: #efefef; color: black; font-size: 12px; margin-left: 10px; }
+        .following { background-color: #dbdbdb; color: #666; }
+        .post-card { background: white; border: 1px solid #dbdbdb; border-radius: 8px; margin-bottom: 20px; overflow: hidden; }
         .post-header { padding: 10px; font-weight: bold; display: flex; align-items: center; border-bottom: 1px solid #efefef; justify-content: space-between; }
         .user-info { display: flex; align-items: center; }
         .user-pic { width: 35px; height: 35px; border-radius: 50%; margin-right: 10px; object-fit: cover; }
-        .post-media { width: 100%; display: block; background: #000; }
-        .post-actions { padding: 10px; display: flex; gap: 15px; font-size: 20px; }
-        .action-btn { cursor: pointer; background: none; border: none; font-size: 22px; padding: 0; }
-        .delete-btn { color: #ed4956; font-size: 14px; background: none; border: none; cursor: pointer; }
-        .post-content { padding: 0 12px 12px 12px; }
+        .post-media { width: 100%; display: block; }
+        .post-actions { padding: 10px; display: flex; gap: 15px; }
+        .action-btn { background: none; border: none; font-size: 22px; cursor: pointer; }
         .comment-box { border-top: 1px solid #efefef; padding: 10px; display: flex; }
         .comment-input { border: none; flex-grow: 1; outline: none; font-size: 14px; }
     </style>
@@ -39,21 +39,24 @@
             <input type="email" id="auth-email" placeholder="Email">
             <input type="password" id="auth-password" placeholder="Password">
             <button id="auth-btn" class="btn-primary" onclick="handleAuth()">Login</button>
-            <span style="color:#0095f6; cursor:pointer; display:block; text-align:center; margin-top:10px;" onclick="toggleAuthMode()">അക്കൗണ്ട് ഇല്ലേ? Sign Up ചെയ്യുക</span>
+            <p onclick="toggleAuthMode()" style="color:#0095f6; cursor:pointer; text-align:center; font-size:14px;">Switch Login/Signup</p>
         </div>
 
         <div id="app-content" style="display:none;">
             <div class="card" style="display:flex; align-items:center; justify-content: space-between;">
                 <div style="display:flex; align-items:center;">
                     <img id="current-user-pic" class="user-pic" src="">
-                    <span id="current-user-name" style="font-weight:bold;"></span>
+                    <div>
+                        <div id="current-user-name" style="font-weight:bold;"></div>
+                        <div id="user-stats" style="font-size:11px; color:#777;">0 followers</div>
+                    </div>
                 </div>
-                <button onclick="logout()" style="background:none; color:red;">Logout</button>
+                <button onclick="logout()" style="background:none; color:red; font-size:12px;">Logout</button>
             </div>
 
             <div class="card">
                 <input type="file" id="post-media-input" accept="image/*,video/*">
-                <input type="text" id="post-caption-input" placeholder="ക്യാപ്ഷൻ എഴുതുക...">
+                <input type="text" id="post-caption-input" placeholder="ക്യാപ്ഷൻ...">
                 <button id="post-btn" class="btn-primary" onclick="handlePost()">Post Now</button>
             </div>
 
@@ -64,7 +67,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, setDoc, getDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAthFMO8zGT5BtiOkh4zkc71jL06LR_F9c",
@@ -80,135 +83,123 @@
         const db = getFirestore(app);
 
         let isLoginMode = true;
-        window.toggleAuthMode = () => {
-            isLoginMode = !isLoginMode;
-            document.getElementById('auth-title').innerText = isLoginMode ? "Login" : "Sign Up";
-            document.getElementById('signup-extra').style.display = isLoginMode ? "none" : "block";
-        };
+        window.toggleAuthMode = () => { isLoginMode = !isLoginMode; document.getElementById('signup-extra').style.display = isLoginMode ? "none" : "block"; };
 
         window.handleAuth = async () => {
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
-            if (isLoginMode) {
-                await signInWithEmailAndPassword(auth, email, password).catch(e => alert(e.message));
-            } else {
-                const name = document.getElementById('reg-username').value;
-                const file = document.getElementById('reg-profile-pic').files[0];
-                const formData = new FormData();
-                formData.append("file", file);
-                formData.append("upload_preset", "mloo8sj4");
-                const res = await fetch("https://api.cloudinary.com/v1_1/dpr1oyqat/image/upload", {method:"POST", body:formData});
-                const data = await res.json();
-                const userCred = await createUserWithEmailAndPassword(auth, email, password);
-                await updateProfile(userCred.user, { displayName: name, photoURL: data.secure_url });
-                location.reload();
-            }
+            try {
+                if (isLoginMode) {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } else {
+                    const name = document.getElementById('reg-username').value;
+                    const file = document.getElementById('reg-profile-pic').files[0];
+                    const formData = new FormData();
+                    formData.append("file", file); formData.append("upload_preset", "mloo8sj4");
+                    const res = await fetch("https://api.cloudinary.com/v1_1/dpr1oyqat/image/upload", {method:"POST", body:formData});
+                    const data = await res.json();
+                    const userCred = await createUserWithEmailAndPassword(auth, email, password);
+                    await updateProfile(userCred.user, { displayName: name, photoURL: data.secure_url });
+                    await setDoc(doc(db, "users", userCred.user.uid), { name: name, photo: data.secure_url, followers: [] });
+                    location.reload();
+                }
+            } catch (e) { alert(e.message); }
         };
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('auth-section').style.display = "none";
                 document.getElementById('app-content').style.display = "block";
-                document.getElementById('current-user-name').innerText = user.displayName;
                 document.getElementById('current-user-pic').src = user.photoURL;
+                document.getElementById('current-user-name').innerText = user.displayName;
+                
+                // Watch followers count for current user
+                onSnapshot(doc(db, "users", user.uid), (doc) => {
+                    if(doc.exists()) document.getElementById('user-stats').innerText = `${doc.data().followers.length} followers`;
+                });
+
                 loadPosts();
+            } else {
+                document.getElementById('auth-section').style.display = "block";
+                document.getElementById('app-content').style.display = "none";
             }
         });
 
         window.logout = () => signOut(auth);
 
+        window.toggleFollow = async (targetUserId) => {
+            const myId = auth.currentUser.uid;
+            if (myId === targetUserId) return;
+            const userRef = doc(db, "users", targetUserId);
+            const userDoc = await getDoc(userRef);
+            const followers = userDoc.data().followers || [];
+            await updateDoc(userRef, {
+                followers: followers.includes(myId) ? arrayRemove(myId) : arrayUnion(myId)
+            });
+        };
+
         window.handlePost = async () => {
             const file = document.getElementById('post-media-input').files[0];
             const caption = document.getElementById('post-caption-input').value;
-            if (!file) return alert("Select a file!");
-            
-            document.getElementById('post-btn').innerText = "Uploading...";
-            const resourceType = file.type.startsWith('video') ? 'video' : 'image';
-            const formData = new FormData();
-            formData.append("file", file);
-            formData.append("upload_preset", "mloo8sj4");
-
-            const res = await fetch(`https://api.cloudinary.com/v1_1/dpr1oyqat/${resourceType}/upload`, {method:"POST", body:formData});
+            if (!file) return alert("Select file!");
+            document.getElementById('post-btn').innerText = "Posting...";
+            const type = file.type.startsWith('video') ? 'video' : 'image';
+            const formData = new FormData(); formData.append("file", file); formData.append("upload_preset", "mloo8sj4");
+            const res = await fetch(`https://api.cloudinary.com/v1_1/dpr1oyqat/${type}/upload`, {method:"POST", body:formData});
             const data = await res.json();
-
             await addDoc(collection(db, "posts"), {
-                mediaUrl: data.secure_url,
-                mediaType: resourceType,
-                caption: caption,
-                username: auth.currentUser.displayName,
-                userPhoto: auth.currentUser.photoURL,
-                userId: auth.currentUser.uid,
-                likes: [],
-                comments: [],
-                timestamp: serverTimestamp()
+                mediaUrl: data.secure_url, mediaType: type, caption: caption,
+                username: auth.currentUser.displayName, userPhoto: auth.currentUser.photoURL,
+                userId: auth.currentUser.uid, likes: [], comments: [], timestamp: serverTimestamp()
             });
             location.reload();
         };
 
-        window.deletePost = async (postId) => {
-            if (confirm("ഈ പോസ്റ്റ് ഡിലീറ്റ് ചെയ്യണോ?")) {
-                await deleteDoc(doc(db, "posts", postId));
-            }
-        };
-
-        window.toggleLike = async (postId, likes) => {
-            const postRef = doc(db, "posts", postId);
-            const isLiked = likes.includes(auth.currentUser.uid);
-            await updateDoc(postRef, { likes: isLiked ? arrayRemove(auth.currentUser.uid) : arrayUnion(auth.currentUser.uid) });
-        };
-
-        window.sharePost = (url) => {
-            navigator.clipboard.writeText(url);
-            alert("ലിങ്ക് കോപ്പി ചെയ്തു!");
-        };
-
-        window.addComment = async (postId, inputId) => {
-            const text = document.getElementById(inputId).value;
-            if (!text) return;
-            const postRef = doc(db, "posts", postId);
-            await updateDoc(postRef, {
-                comments: arrayUnion({ user: auth.currentUser.displayName, text: text })
-            });
-            document.getElementById(inputId).value = "";
-        };
-
         function loadPosts() {
             onSnapshot(query(collection(db, "posts"), orderBy("timestamp", "desc")), (snap) => {
-                const feed = document.getElementById('feed-section');
-                feed.innerHTML = "";
-                snap.forEach(docSnap => {
+                const feed = document.getElementById('feed-section'); feed.innerHTML = "";
+                snap.forEach(async (docSnap) => {
                     const post = docSnap.data();
+                    const postId = docSnap.id;
                     const isOwner = post.userId === auth.currentUser.uid;
-                    const mediaHtml = post.mediaType === 'video' 
-                        ? `<video class="post-media" src="${post.mediaUrl}" controls></video>`
-                        : `<img class="post-media" src="${post.mediaUrl}">`;
                     
-                    let commentsHtml = post.comments.map(c => `<div><b>${c.user}</b> ${c.text}</div>`).join('');
-
-                    feed.innerHTML += `
-                        <div class="post-card">
-                            <div class="post-header">
-                                <div class="user-info"><img class="user-pic" src="${post.userPhoto}"> ${post.username}</div>
-                                ${isOwner ? `<button class="delete-btn" onclick="deletePost('${docSnap.id}')">Delete</button>` : ''}
-                            </div>
-                            ${mediaHtml}
-                            <div class="post-actions">
-                                <button class="action-btn" onclick="toggleLike('${docSnap.id}', ${JSON.stringify(post.likes)})">${post.likes.includes(auth.currentUser.uid) ? '❤️' : '🤍'}</button>
-                                <button class="action-btn" onclick="sharePost('${post.mediaUrl}')">🔗</button>
-                            </div>
-                            <div class="post-content">
-                                <b>${post.likes.length} likes</b><br>
-                                <b>${post.username}</b> ${post.caption}
-                            </div>
-                            <div style="padding: 0 12px; font-size:13px; color:#555;">${commentsHtml}</div>
-                            <div class="comment-box">
-                                <input id="in-${docSnap.id}" class="comment-input" placeholder="കമന്റ് എഴുതുക...">
-                                <button onclick="addComment('${docSnap.id}', 'in-${docSnap.id}')" style="background:none; color:#0095f6;">Post</button>
-                            </div>
-                        </div>`;
+                    // Separate listener for each user's follow status
+                    const userRef = doc(db, "users", post.userId);
+                    onSnapshot(userRef, (uDoc) => {
+                        const followers = uDoc.data()?.followers || [];
+                        const isFollowing = followers.includes(auth.currentUser.uid);
+                        const followBtnHtml = isOwner ? "" : `<button onclick="toggleFollow('${post.userId}')" class="follow-btn ${isFollowing?'following':''}">
+                            ${isFollowing ? 'Following' : 'Follow'}</button>`;
+                        
+                        const postEl = document.getElementById(`post-${postId}`);
+                        const mediaHtml = post.mediaType === 'video' ? `<video class="post-media" src="${post.mediaUrl}" controls></video>` : `<img class="post-media" src="${post.mediaUrl}">`;
+                        
+                        const html = `
+                            <div class="post-card" id="post-${postId}">
+                                <div class="post-header">
+                                    <div class="user-info"><img class="user-pic" src="${post.userPhoto}"> ${post.username} ${followBtnHtml}</div>
+                                    ${isOwner ? `<button onclick="deletePost('${postId}')" style="color:red; background:none;">Delete</button>` : ""}
+                                </div>
+                                ${mediaHtml}
+                                <div class="post-actions">
+                                    <button class="action-btn" onclick="toggleLike('${postId}', ${JSON.stringify(post.likes)})">${post.likes.includes(auth.currentUser.uid)?'❤️':'🤍'}</button>
+                                </div>
+                                <div style="padding:0 12px 10px 12px; font-size:14px;">
+                                    <b>${post.likes.length} likes</b> · <b>${post.username}</b> ${post.caption}
+                                </div>
+                            </div>`;
+                        
+                        if(postEl) postEl.outerHTML = html; else feed.innerHTML += html;
+                    });
                 });
             });
         }
+
+        window.deletePost = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db, "posts", id)); };
+        window.toggleLike = async (id, likes) => { 
+            const isLiked = likes.includes(auth.currentUser.uid);
+            await updateDoc(doc(db, "posts", id), { likes: isLiked ? arrayRemove(auth.currentUser.uid) : arrayUnion(auth.currentUser.uid) });
+        };
     </script>
 </body>
 </html>
