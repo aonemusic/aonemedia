@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ml">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A-One Chat | Full Features</title>
+    <title>A-One Chat | Delete Support</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #fafafa; margin: 0; padding-bottom: 50px; }
         .header { background: white; border-bottom: 1px solid #dbdbdb; padding: 10px 0; text-align: center; position: sticky; top: 0; z-index: 1000; }
@@ -12,17 +12,17 @@
         input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #dbdbdb; border-radius: 4px; box-sizing: border-box; }
         button { padding: 10px 15px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 5px; }
         .btn-primary { background-color: #0095f6; color: white; width: 100%; }
-        .post-card { background: white; border: 1px solid #dbdbdb; border-radius: 8px; margin-bottom: 20px; overflow: hidden; }
-        .post-header { padding: 10px; font-weight: bold; display: flex; align-items: center; border-bottom: 1px solid #efefef; }
+        .post-card { background: white; border: 1px solid #dbdbdb; border-radius: 8px; margin-bottom: 20px; overflow: hidden; position: relative; }
+        .post-header { padding: 10px; font-weight: bold; display: flex; align-items: center; border-bottom: 1px solid #efefef; justify-content: space-between; }
+        .user-info { display: flex; align-items: center; }
         .user-pic { width: 35px; height: 35px; border-radius: 50%; margin-right: 10px; object-fit: cover; }
         .post-media { width: 100%; display: block; background: #000; }
         .post-actions { padding: 10px; display: flex; gap: 15px; font-size: 20px; }
         .action-btn { cursor: pointer; background: none; border: none; font-size: 22px; padding: 0; }
+        .delete-btn { color: #ed4956; font-size: 14px; background: none; border: none; cursor: pointer; }
         .post-content { padding: 0 12px 12px 12px; }
         .comment-box { border-top: 1px solid #efefef; padding: 10px; display: flex; }
         .comment-input { border: none; flex-grow: 1; outline: none; font-size: 14px; }
-        .comment-list { padding: 5px 12px; font-size: 13px; color: #444; }
-        .comment-item { margin-bottom: 4px; }
     </style>
 </head>
 <body>
@@ -33,13 +33,13 @@
         <div id="auth-section" class="card">
             <h3 id="auth-title" style="text-align:center;">Login</h3>
             <div id="signup-extra" style="display:none;">
-                <input type="text" id="reg-username" placeholder="Full Name">
+                <input type="text" id="reg-username" placeholder="മുഴുവൻ പേര്">
                 <input type="file" id="reg-profile-pic" accept="image/*">
             </div>
             <input type="email" id="auth-email" placeholder="Email">
             <input type="password" id="auth-password" placeholder="Password">
             <button id="auth-btn" class="btn-primary" onclick="handleAuth()">Login</button>
-            <span class="toggle-link" style="color:#0095f6; cursor:pointer; display:block; text-align:center; margin-top:10px;" onclick="toggleAuthMode()">Switch to Sign Up</span>
+            <span style="color:#0095f6; cursor:pointer; display:block; text-align:center; margin-top:10px;" onclick="toggleAuthMode()">അക്കൗണ്ട് ഇല്ലേ? Sign Up ചെയ്യുക</span>
         </div>
 
         <div id="app-content" style="display:none;">
@@ -53,7 +53,7 @@
 
             <div class="card">
                 <input type="file" id="post-media-input" accept="image/*,video/*">
-                <input type="text" id="post-caption-input" placeholder="Write a caption...">
+                <input type="text" id="post-caption-input" placeholder="ക്യാപ്ഷൻ എഴുതുക...">
                 <button id="post-btn" class="btn-primary" onclick="handlePost()">Post Now</button>
             </div>
 
@@ -64,7 +64,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAthFMO8zGT5BtiOkh4zkc71jL06LR_F9c",
@@ -137,11 +137,18 @@
                 caption: caption,
                 username: auth.currentUser.displayName,
                 userPhoto: auth.currentUser.photoURL,
+                userId: auth.currentUser.uid,
                 likes: [],
                 comments: [],
                 timestamp: serverTimestamp()
             });
             location.reload();
+        };
+
+        window.deletePost = async (postId) => {
+            if (confirm("ഈ പോസ്റ്റ് ഡിലീറ്റ് ചെയ്യണോ?")) {
+                await deleteDoc(doc(db, "posts", postId));
+            }
         };
 
         window.toggleLike = async (postId, likes) => {
@@ -160,10 +167,7 @@
             if (!text) return;
             const postRef = doc(db, "posts", postId);
             await updateDoc(postRef, {
-                comments: arrayUnion({
-                    user: auth.currentUser.displayName,
-                    text: text
-                })
+                comments: arrayUnion({ user: auth.currentUser.displayName, text: text })
             });
             document.getElementById(inputId).value = "";
         };
@@ -174,28 +178,31 @@
                 feed.innerHTML = "";
                 snap.forEach(docSnap => {
                     const post = docSnap.data();
-                    const isLiked = post.likes.includes(auth.currentUser.uid);
+                    const isOwner = post.userId === auth.currentUser.uid;
                     const mediaHtml = post.mediaType === 'video' 
                         ? `<video class="post-media" src="${post.mediaUrl}" controls></video>`
                         : `<img class="post-media" src="${post.mediaUrl}">`;
                     
-                    let commentsHtml = post.comments.map(c => `<div class="comment-item"><b>${c.user}</b> ${c.text}</div>`).join('');
+                    let commentsHtml = post.comments.map(c => `<div><b>${c.user}</b> ${c.text}</div>`).join('');
 
                     feed.innerHTML += `
                         <div class="post-card">
-                            <div class="post-header"><img class="user-pic" src="${post.userPhoto}"> ${post.username}</div>
+                            <div class="post-header">
+                                <div class="user-info"><img class="user-pic" src="${post.userPhoto}"> ${post.username}</div>
+                                ${isOwner ? `<button class="delete-btn" onclick="deletePost('${docSnap.id}')">Delete</button>` : ''}
+                            </div>
                             ${mediaHtml}
                             <div class="post-actions">
-                                <button class="action-btn" onclick="toggleLike('${docSnap.id}', ${JSON.stringify(post.likes)})">${isLiked ? '❤️' : '🤍'}</button>
+                                <button class="action-btn" onclick="toggleLike('${docSnap.id}', ${JSON.stringify(post.likes)})">${post.likes.includes(auth.currentUser.uid) ? '❤️' : '🤍'}</button>
                                 <button class="action-btn" onclick="sharePost('${post.mediaUrl}')">🔗</button>
                             </div>
                             <div class="post-content">
                                 <b>${post.likes.length} likes</b><br>
                                 <b>${post.username}</b> ${post.caption}
                             </div>
-                            <div class="comment-list">${commentsHtml}</div>
+                            <div style="padding: 0 12px; font-size:13px; color:#555;">${commentsHtml}</div>
                             <div class="comment-box">
-                                <input id="in-${docSnap.id}" class="comment-input" placeholder="Add a comment...">
+                                <input id="in-${docSnap.id}" class="comment-input" placeholder="കമന്റ് എഴുതുക...">
                                 <button onclick="addComment('${docSnap.id}', 'in-${docSnap.id}')" style="background:none; color:#0095f6;">Post</button>
                             </div>
                         </div>`;
