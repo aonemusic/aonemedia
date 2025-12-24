@@ -21,9 +21,8 @@
         body { background: var(--bg-dark); color: var(--text-main); overflow-x: hidden; }
 
         /* Navigation */
-        nav { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #1a1a1a; }
-        .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); letter-spacing: -1px; }
-        .live-status { font-size: 0.7rem; background: rgba(0, 242, 255, 0.1); padding: 4px 10px; border-radius: 20px; border: 1px solid var(--primary); }
+        nav { padding: 20px; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #1a1a1a; }
+        .logo { font-size: 1.6rem; font-weight: 800; color: var(--primary); letter-spacing: 1px; }
 
         .container { padding: 20px; max-width: 800px; margin: 0 auto; }
         .search-box { width: 100%; padding: 15px; border-radius: 15px; border: 1px solid #222; background: var(--card-bg); color: white; outline: none; margin-bottom: 25px; transition: 0.3s; }
@@ -38,11 +37,6 @@
         .song-title { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .song-stats { display: flex; gap: 10px; font-size: 0.7rem; color: var(--text-dim); margin-top: 5px; }
 
-        /* Player Bar */
-        .mini-player { position: fixed; bottom: 80px; left: 15px; right: 15px; background: #111; padding: 12px; border-radius: 15px; display: none; align-items: center; gap: 12px; border: 1px solid var(--primary); z-index: 2000; }
-        .mini-player img { width: 45px; height: 45px; border-radius: 10px; }
-        .mini-info { flex: 1; overflow: hidden; }
-
         /* Full Player Overlay */
         #full-player { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; flex-direction: column; align-items: center; padding: 40px 25px; text-align: center; }
         .player-img-large { width: 80%; aspect-ratio: 1/1; border-radius: 25px; object-fit: cover; box-shadow: 0 20px 50px rgba(0, 242, 255, 0.2); }
@@ -50,45 +44,27 @@
         #seekbar { width: 100%; accent-color: var(--primary); margin: 20px 0; }
         .action-btns { display: flex; justify-content: space-around; width: 100%; margin-top: 20px; font-size: 1.5rem; }
 
-        /* Download Button Style */
         .download-btn { background: #1DB954; color: white; padding: 12px 25px; border-radius: 30px; text-decoration: none; font-weight: bold; margin-top: 20px; display: inline-block; }
 
-        /* Bottom Nav */
+        /* Tabs */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #000; padding: 20px; display: flex; justify-content: space-around; border-top: 1px solid #111; z-index: 4000; }
         .nav-link { color: #555; font-size: 1.3rem; cursor: pointer; }
         .nav-link.active { color: var(--primary); }
 
-        /* Generic Tab Style */
         .tab-overlay { position: fixed; inset: 0; background: var(--bg-dark); z-index: 3000; padding: 30px; display: none; flex-direction: column; overflow-y: auto; }
         .close-tab { font-size: 1.5rem; margin-bottom: 20px; }
-        .upload-field { margin-bottom: 20px; }
-        .upload-field label { display: block; margin-bottom: 8px; color: var(--text-dim); }
         .btn-full { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--primary); color: #000; font-weight: 800; margin-top: 10px; cursor: pointer; }
-
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        .live-icon { color: red; animation: pulse 1s infinite; margin-right: 5px; }
     </style>
 </head>
 <body>
 
     <nav>
         <div class="logo">A ONE MUSIC</div>
-        <div class="live-status"><i class="fas fa-circle live-icon"></i> <span id="online-count">0</span> Online</div>
     </nav>
 
-    <div class="container" id="main-content">
-        <input type="text" class="search-box" id="search-input" placeholder="Search for tracks, artists..." oninput="renderSongs()">
-        
-        <div class="music-grid" id="song-list">
-            </div>
-    </div>
-
-    <div class="mini-player" id="mini-player" onclick="openFullPlayer()">
-        <img id="m-img" src="">
-        <div class="mini-info">
-            <div id="m-title" class="song-title">Song Name</div>
-        </div>
-        <i class="fas fa-play" id="m-play-icon"></i>
+    <div class="container">
+        <input type="text" class="search-box" id="search-input" placeholder="Search for tracks..." oninput="renderSongs()">
+        <div class="music-grid" id="song-list"></div>
     </div>
 
     <div id="full-player">
@@ -117,29 +93,28 @@
 
     <div id="upload-tab" class="tab-overlay">
         <i class="fas fa-arrow-left close-tab" onclick="closeTab()"></i>
-        <h2>Upload New Track</h2>
-        <div class="upload-field" style="margin-top: 20px;">
+        <h2>Upload Track</h2>
+        <div style="margin-top: 20px;">
             <input type="text" id="up-name" class="search-box" placeholder="Song Name">
-            <button class="btn-full" style="background: #222; color: #fff;" onclick="pickMedia('img')">Pick Cover Photo</button>
-            <button class="btn-full" style="background: #222; color: #fff;" onclick="pickMedia('aud')">Pick Music File</button>
-            <button class="btn-full" onclick="publishSong()">Publish Song</button>
+            <button class="btn-full" style="background: #222; color: #fff;" onclick="pickMedia('img')">1. Pick Cover</button>
+            <button class="btn-full" style="background: #222; color: #fff;" onclick="pickMedia('aud')">2. Pick Music</button>
+            <button class="btn-full" onclick="publishSong()">3. Publish Now</button>
         </div>
     </div>
 
     <div class="bottom-nav">
         <i class="fas fa-home nav-link active" onclick="location.reload()"></i>
         <i class="fas fa-cloud-upload-alt nav-link" onclick="openTab('upload-tab')"></i>
-        <i class="fas fa-user-circle nav-link" onclick="alert('Profile Coming Soon!')"></i>
+        <i class="fas fa-user-circle nav-link" onclick="alert('Profile Saved!')"></i>
     </div>
 
     <audio id="audio-engine"></audio>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, push, set, update, increment, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, onValue, push, update, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Your API Config
         const firebaseConfig = {
             apiKey: "AIzaSyAthFMO8zGT5BtiOkh4zkc71jL06LR_F9c",
             authDomain: "a-one-chat-19ad6.firebaseapp.com",
@@ -158,28 +133,12 @@
         let allSongs = [];
         let currentPlayingId = null;
 
-        // Login & Online Counter
-        signInAnonymously(auth).then(() => {
-            onAuthStateChanged(auth, (user) => {
-                if(user) {
-                    const statusRef = ref(db, 'online_users/' + user.uid);
-                    set(statusRef, true);
-                    onDisconnect(statusRef).remove();
-                }
-            });
-        });
+        signInAnonymously(auth);
 
-        onValue(ref(db, 'online_users'), (snap) => {
-            document.getElementById('online-count').innerText = snap.exists() ? Object.keys(snap.val()).length : 0;
-        });
-
-        // Load Songs
         onValue(ref(db, 'songs'), (snap) => {
             allSongs = [];
             if(snap.exists()) {
-                snap.forEach(child => {
-                    allSongs.push({id: child.key, ...child.val()});
-                });
+                snap.forEach(child => { allSongs.push({id: child.key, ...child.val()}); });
                 renderSongs();
             }
         });
@@ -188,7 +147,6 @@
             const list = document.getElementById('song-list');
             const term = document.getElementById('search-input').value.toLowerCase();
             list.innerHTML = "";
-            
             allSongs.filter(s => s.title.toLowerCase().includes(term)).forEach(song => {
                 list.innerHTML += `
                     <div class="song-card" onclick="initPlayer('${song.id}')">
@@ -200,25 +158,17 @@
                                 <span><i class="fas fa-heart"></i> ${song.likes || 0}</span>
                             </div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         }
 
         window.initPlayer = (id) => {
             const song = allSongs.find(s => s.id === id);
             currentPlayingId = id;
-            
-            // UI Updates
-            document.getElementById('m-img').src = document.getElementById('p-img').src = song.logo;
-            document.getElementById('m-title').innerText = document.getElementById('p-title').innerText = song.title;
-            document.getElementById('mini-player').style.display = 'flex';
-            
-            // Download logic
-            const dLink = document.getElementById('download-link');
-            dLink.href = song.url;
-            dLink.setAttribute('target', '_blank'); // Important for Cloudinary links
-
+            document.getElementById('p-img').src = song.logo;
+            document.getElementById('p-title').innerText = song.title;
+            document.getElementById('download-link').href = song.url;
+            document.getElementById('full-player').style.display = 'flex';
             engine.src = song.url;
             engine.play();
             update(ref(db, `songs/${id}`), { views: increment(1) });
@@ -226,30 +176,20 @@
         }
 
         window.togglePlay = () => {
-            if(engine.paused) {
-                engine.play();
-                document.getElementById('main-play-btn').className = "fas fa-pause-circle";
-            } else {
-                engine.pause();
-                document.getElementById('main-play-btn').className = "fas fa-play-circle";
-            }
+            if(engine.paused) { engine.play(); document.getElementById('main-play-btn').className = "fas fa-pause-circle"; }
+            else { engine.pause(); document.getElementById('main-play-btn').className = "fas fa-play-circle"; }
         }
 
-        // Seekbar Logic
         engine.ontimeupdate = () => {
-            const pct = (engine.currentTime / engine.duration) * 100;
-            document.getElementById('seekbar').value = pct || 0;
+            document.getElementById('seekbar').value = (engine.currentTime / engine.duration) * 100 || 0;
             document.getElementById('cur-time').innerText = formatTime(engine.currentTime);
             document.getElementById('dur-time').innerText = formatTime(engine.duration);
         }
 
-        document.getElementById('seekbar').oninput = function() {
-            engine.currentTime = (this.value / 100) * engine.duration;
-        }
+        document.getElementById('seekbar').oninput = function() { engine.currentTime = (this.value / 100) * engine.duration; }
 
         function formatTime(sec) {
-            let m = Math.floor(sec/60);
-            let s = Math.floor(sec%60);
+            let m = Math.floor(sec/60); let s = Math.floor(sec%60);
             return `${m}:${s < 10 ? '0'+s : s}`;
         }
 
@@ -260,7 +200,6 @@
             }
         }
 
-        // Upload Logic
         let tempImg = "", tempAud = "";
         window.pickMedia = (type) => {
             cloudinary.openUploadWidget({ cloudName: "dcsczlahu", uploadPreset: "ml_default" }, (err, res) => {
@@ -274,27 +213,16 @@
 
         window.publishSong = () => {
             const name = document.getElementById('up-name').value;
-            if(!name || !tempAud) return alert("Please add name and music file");
-            
-            push(ref(db, 'songs'), {
-                title: name,
-                url: tempAud,
-                logo: tempImg,
-                views: 0,
-                likes: 0
-            });
-            alert("Success!");
+            if(!name || !tempAud) return alert("Add details");
+            push(ref(db, 'songs'), { title: name, url: tempAud, logo: tempImg, views: 0, likes: 0 });
+            alert("Published!");
             closeTab();
         }
 
-        // Tab Controllers
         window.openTab = (id) => document.getElementById(id).style.display = 'flex';
         window.closeTab = () => document.querySelectorAll('.tab-overlay').forEach(t => t.style.display = 'none');
-        window.openFullPlayer = () => document.getElementById('full-player').style.display = 'flex';
         window.closeFullPlayer = () => document.getElementById('full-player').style.display = 'none';
-        window.shareSong = () => {
-            navigator.share({ title: 'A One Music', text: 'Listen to this song!', url: window.location.href });
-        }
+        window.shareSong = () => navigator.share({ title: 'A One Music', url: window.location.href });
     </script>
 </body>
 </html>
