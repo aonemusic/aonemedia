@@ -3,76 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A One Music - Stream & Download</title>
+    <title>A One Music - Secure</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
-        
-        :root {
-            --primary: #00f2ff;
-            --bg-dark: #080808;
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --text-main: #ffffff;
-            --text-dim: #a0a0a0;
-        }
-
+        :root { --primary: #00f2ff; --bg-dark: #080808; --card-bg: rgba(255, 255, 255, 0.05); }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
-        body { background: var(--bg-dark); color: var(--text-main); overflow-x: hidden; }
+        body { background: var(--bg-dark); color: #fff; }
 
-        /* Navigation */
-        nav { padding: 20px; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #1a1a1a; }
-        .logo { font-size: 1.6rem; font-weight: 800; color: var(--primary); letter-spacing: 1px; }
-
+        /* Auth Screen */
+        #auth-screen { position: fixed; inset: 0; background: #000; z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .auth-box { width: 100%; max-width: 400px; background: #111; padding: 30px; border-radius: 20px; border: 1px solid #222; }
+        .input-group { margin-bottom: 15px; }
+        .input-group input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #333; background: #000; color: #fff; outline: none; }
+        
+        /* Navigation & Feed */
+        nav { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #1a1a1a; }
         .container { padding: 20px; max-width: 800px; margin: 0 auto; }
-        .search-box { width: 100%; padding: 15px; border-radius: 15px; border: 1px solid #222; background: var(--card-bg); color: white; outline: none; margin-bottom: 25px; transition: 0.3s; }
-        .search-box:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(0, 242, 255, 0.2); }
-
-        /* Music Grid */
         .music-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding-bottom: 100px; }
-        .song-card { background: var(--card-bg); padding: 12px; border-radius: 20px; border: 1px solid #1a1a1a; transition: 0.3s; position: relative; }
-        .song-card:active { transform: scale(0.95); }
+        .song-card { background: var(--card-bg); padding: 12px; border-radius: 20px; border: 1px solid #1a1a1a; }
         .song-card img { width: 100%; aspect-ratio: 1/1; border-radius: 15px; object-fit: cover; }
-        .song-info { margin-top: 10px; }
-        .song-title { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .song-stats { display: flex; gap: 10px; font-size: 0.7rem; color: var(--text-dim); margin-top: 5px; }
-
+        
         /* Full Player Overlay */
         #full-player { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; flex-direction: column; align-items: center; padding: 40px 25px; text-align: center; }
         .player-img-large { width: 80%; aspect-ratio: 1/1; border-radius: 25px; object-fit: cover; box-shadow: 0 20px 50px rgba(0, 242, 255, 0.2); }
-        .player-controls { width: 100%; margin-top: 40px; }
         #seekbar { width: 100%; accent-color: var(--primary); margin: 20px 0; }
-        .action-btns { display: flex; justify-content: space-around; width: 100%; margin-top: 20px; font-size: 1.5rem; }
-
+        .action-btns { display: flex; justify-content: space-around; width: 100%; margin-top: 20px; font-size: 1.8rem; }
         .download-btn { background: #1DB954; color: white; padding: 12px 25px; border-radius: 30px; text-decoration: none; font-weight: bold; margin-top: 20px; display: inline-block; }
 
         /* Tabs */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #000; padding: 20px; display: flex; justify-content: space-around; border-top: 1px solid #111; z-index: 4000; }
-        .nav-link { color: #555; font-size: 1.3rem; cursor: pointer; }
-        .nav-link.active { color: var(--primary); }
-
-        .tab-overlay { position: fixed; inset: 0; background: var(--bg-dark); z-index: 3000; padding: 30px; display: none; flex-direction: column; overflow-y: auto; }
-        .close-tab { font-size: 1.5rem; margin-bottom: 20px; }
-        .btn-full { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--primary); color: #000; font-weight: 800; margin-top: 10px; cursor: pointer; }
+        .tab-overlay { position: fixed; inset: 0; background: var(--bg-dark); z-index: 3000; padding: 30px; display: none; flex-direction: column; }
+        .btn-full { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--primary); color: #000; font-weight: 800; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <nav>
-        <div class="logo">A ONE MUSIC</div>
-    </nav>
+    <div id="auth-screen">
+        <div class="auth-box">
+            <h2 style="color: var(--primary); margin-bottom: 20px; text-align: center;">A ONE LOGIN</h2>
+            <div class="input-group"><input type="text" id="user-name" placeholder="User Name"></div>
+            <div class="input-group"><input type="email" id="auth-email" placeholder="Email"></div>
+            <div class="input-group"><input type="password" id="auth-pass" placeholder="Password"></div>
+            <button class="btn-full" onclick="handleAuth('signup')" style="margin-bottom: 10px;">Sign Up</button>
+            <button class="btn-full" style="background: transparent; color: #fff; border: 1px solid #333;" onclick="handleAuth('login')">Login</button>
+        </div>
+    </div>
 
-    <div class="container">
-        <input type="text" class="search-box" id="search-input" placeholder="Search for tracks..." oninput="renderSongs()">
-        <div class="music-grid" id="song-list"></div>
+    <div id="main-ui" style="display: none;">
+        <nav>
+            <div class="logo" style="color: var(--primary); font-weight: 800;">A ONE MUSIC</div>
+            <div id="display-name" style="font-size: 0.8rem; color: #888;"></div>
+        </nav>
+
+        <div class="container">
+            <input type="text" class="input-group" style="width:100%; background: var(--card-bg); color:white; border:1px solid #222; padding:15px; border-radius:15px; margin-bottom: 20px;" placeholder="Search songs..." oninput="renderSongs()">
+            <div class="music-grid" id="song-list"></div>
+        </div>
     </div>
 
     <div id="full-player">
-        <i class="fas fa-chevron-down close-tab" onclick="closeFullPlayer()"></i>
+        <i class="fas fa-chevron-down" style="font-size: 1.5rem; margin-bottom: 20px;" onclick="closeFullPlayer()"></i>
         <img id="p-img" class="player-img-large" src="">
         <h2 id="p-title" style="margin-top: 30px;">Song Title</h2>
         
-        <div class="player-controls">
+        <div style="width: 100%; max-width: 400px; margin-top: 20px;">
             <input type="range" id="seekbar" value="0">
             <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #666;">
                 <span id="cur-time">0:00</span>
@@ -85,44 +81,38 @@
                 <i class="fas fa-share-alt" onclick="shareSong()"></i>
             </div>
         </div>
-
-        <a id="download-link" href="#" download class="download-btn">
-            <i class="fas fa-download"></i> Download Song
-        </a>
+        <a id="download-link" href="#" download class="download-btn"><i class="fas fa-download"></i> Download</a>
     </div>
 
     <div id="upload-tab" class="tab-overlay">
-        <i class="fas fa-arrow-left close-tab" onclick="closeTab()"></i>
+        <i class="fas fa-arrow-left" style="font-size: 1.5rem; margin-bottom: 20px;" onclick="closeTab()"></i>
         <h2>Upload Track</h2>
         <div style="margin-top: 20px;">
-            <input type="text" id="up-name" class="search-box" placeholder="Song Name">
-            <button class="btn-full" style="background: #222; color: #fff;" onclick="pickMedia('img')">1. Pick Cover</button>
-            <button class="btn-full" style="background: #222; color: #fff;" onclick="pickMedia('aud')">2. Pick Music</button>
-            <button class="btn-full" onclick="publishSong()">3. Publish Now</button>
+            <input type="text" id="up-name" style="width:100%; padding:12px; margin-bottom:15px; background:#000; color:#fff; border:1px solid #333; border-radius:10px;" placeholder="Song Name">
+            <button class="btn-full" style="background: #222; color: #fff; margin-bottom: 10px;" onclick="pickMedia('img')">Pick Cover</button>
+            <button class="btn-full" style="background: #222; color: #fff; margin-bottom: 10px;" onclick="pickMedia('aud')">Pick Music</button>
+            <button class="btn-full" onclick="publishSong()">Publish Now</button>
         </div>
     </div>
 
     <div class="bottom-nav">
-        <i class="fas fa-home nav-link active" onclick="location.reload()"></i>
-        <i class="fas fa-cloud-upload-alt nav-link" onclick="openTab('upload-tab')"></i>
-        <i class="fas fa-user-circle nav-link" onclick="alert('Profile Saved!')"></i>
+        <i class="fas fa-home" style="color: var(--primary);" onclick="location.reload()"></i>
+        <i class="fas fa-cloud-upload-alt" style="color: #555;" onclick="openTab('upload-tab')"></i>
+        <i class="fas fa-sign-out-alt" style="color: #555;" onclick="auth.signOut(); location.reload();"></i>
     </div>
 
     <audio id="audio-engine"></audio>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, onValue, push, update, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAthFMO8zGT5BtiOkh4zkc71jL06LR_F9c",
             authDomain: "a-one-chat-19ad6.firebaseapp.com",
             databaseURL: "https://a-one-chat-19ad6-default-rtdb.firebaseio.com",
-            projectId: "a-one-chat-19ad6",
-            storageBucket: "a-one-chat-19ad6.firebasestorage.app",
-            messagingSenderId: "691783470864",
-            appId: "1:691783470864:web:0b119fcddf984af66e5f95"
+            projectId: "a-one-chat-19ad6"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -133,34 +123,58 @@
         let allSongs = [];
         let currentPlayingId = null;
 
-        signInAnonymously(auth);
+        // --- AUTH LOGIC ---
+        window.handleAuth = async (type) => {
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-pass').value;
+            const name = document.getElementById('user-name').value;
 
-        onValue(ref(db, 'songs'), (snap) => {
-            allSongs = [];
-            if(snap.exists()) {
-                snap.forEach(child => { allSongs.push({id: child.key, ...child.val()}); });
-                renderSongs();
+            try {
+                if (type === 'signup') {
+                    const res = await createUserWithEmailAndPassword(auth, email, pass);
+                    await updateProfile(res.user, { displayName: name });
+                } else {
+                    await signInWithEmailAndPassword(auth, email, pass);
+                }
+            } catch (err) { alert(err.message); }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('main-ui').style.display = 'block';
+                document.getElementById('display-name').innerText = "Hi, " + user.displayName;
+                loadSongs();
             }
         });
 
+        // --- MUSIC LOGIC ---
+        function loadSongs() {
+            onValue(ref(db, 'songs'), (snap) => {
+                allSongs = [];
+                if(snap.exists()) {
+                    snap.forEach(child => { allSongs.push({id: child.key, ...child.val()}); });
+                    renderSongs();
+                }
+            });
+        }
+
         window.renderSongs = () => {
             const list = document.getElementById('song-list');
-            const term = document.getElementById('search-input').value.toLowerCase();
             list.innerHTML = "";
-            allSongs.filter(s => s.title.toLowerCase().includes(term)).forEach(song => {
+            allSongs.forEach(song => {
                 list.innerHTML += `
                     <div class="song-card" onclick="initPlayer('${song.id}')">
                         <img src="${song.logo || 'https://via.placeholder.com/300'}">
-                        <div class="song-info">
-                            <div class="song-title">${song.title}</div>
-                            <div class="song-stats">
-                                <span><i class="fas fa-play"></i> ${song.views || 0}</span>
-                                <span><i class="fas fa-heart"></i> ${song.likes || 0}</span>
+                        <div style="margin-top:10px;">
+                            <div style="font-weight:600; font-size:0.9rem;">${song.title}</div>
+                            <div style="font-size:0.7rem; color:#888; margin-top:5px;">
+                                <i class="fas fa-play"></i> ${song.views || 0} &nbsp; <i class="fas fa-heart"></i> ${song.likes || 0}
                             </div>
                         </div>
                     </div>`;
             });
-        }
+        };
 
         window.initPlayer = (id) => {
             const song = allSongs.find(s => s.id === id);
@@ -169,35 +183,48 @@
             document.getElementById('p-title').innerText = song.title;
             document.getElementById('download-link').href = song.url;
             document.getElementById('full-player').style.display = 'flex';
+            
+            // Check if already liked
+            const isLiked = localStorage.getItem('liked_' + id);
+            document.getElementById('like-btn').style.color = isLiked ? "red" : "#fff";
+
             engine.src = song.url;
             engine.play();
             update(ref(db, `songs/${id}`), { views: increment(1) });
             document.getElementById('main-play-btn').className = "fas fa-pause-circle";
-        }
+        };
+
+        // --- ONE-TIME LIKE LOGIC ---
+        window.handleLike = () => {
+            if (!currentPlayingId) return;
+            const likeKey = 'liked_' + currentPlayingId;
+
+            if (localStorage.getItem(likeKey)) {
+                alert("You already liked this song!");
+                return;
+            }
+
+            update(ref(db, `songs/${currentPlayingId}`), { likes: increment(1) });
+            localStorage.setItem(likeKey, 'true');
+            document.getElementById('like-btn').style.color = "red";
+        };
 
         window.togglePlay = () => {
             if(engine.paused) { engine.play(); document.getElementById('main-play-btn').className = "fas fa-pause-circle"; }
             else { engine.pause(); document.getElementById('main-play-btn').className = "fas fa-play-circle"; }
-        }
+        };
 
         engine.ontimeupdate = () => {
             document.getElementById('seekbar').value = (engine.currentTime / engine.duration) * 100 || 0;
             document.getElementById('cur-time').innerText = formatTime(engine.currentTime);
             document.getElementById('dur-time').innerText = formatTime(engine.duration);
-        }
+        };
 
-        document.getElementById('seekbar').oninput = function() { engine.currentTime = (this.value / 100) * engine.duration; }
+        document.getElementById('seekbar').oninput = function() { engine.currentTime = (this.value / 100) * engine.duration; };
 
         function formatTime(sec) {
             let m = Math.floor(sec/60); let s = Math.floor(sec%60);
             return `${m}:${s < 10 ? '0'+s : s}`;
-        }
-
-        window.handleLike = () => {
-            if(currentPlayingId) {
-                update(ref(db, `songs/${currentPlayingId}`), { likes: increment(1) });
-                document.getElementById('like-btn').style.color = "red";
-            }
         }
 
         let tempImg = "", tempAud = "";
@@ -209,7 +236,7 @@
                     alert("File Selected!");
                 }
             });
-        }
+        };
 
         window.publishSong = () => {
             const name = document.getElementById('up-name').value;
@@ -217,7 +244,7 @@
             push(ref(db, 'songs'), { title: name, url: tempAud, logo: tempImg, views: 0, likes: 0 });
             alert("Published!");
             closeTab();
-        }
+        };
 
         window.openTab = (id) => document.getElementById(id).style.display = 'flex';
         window.closeTab = () => document.querySelectorAll('.tab-overlay').forEach(t => t.style.display = 'none');
